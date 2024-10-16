@@ -1,0 +1,85 @@
+CREATE TABLE Persona 
+(
+	nit varchar(11) NOT NULL,
+	tiponit CHAR NOT NULL,
+	nombre VARCHAR (255) NOT NULL,
+	apellidos VARCHAR (255) NOT NULL,
+	correo VARCHAR (255) NOT NULL,
+	genero CHAR NOT NULL
+);
+
+CREATE TABLE Usuario 
+(
+	login VARCHAR (255) NOT NULL,
+	clave VARCHAR (255) NOT NULL,
+	tipoUsuario CHAR NOT NULL,
+	nit VARCHAR (11) NOT NULL
+);
+
+CREATE TABLE Producto 
+(
+	idProducto INTEGER NOT NULL,
+	nombre VARCHAR (255) NOT NULL,
+	unidadMedida VARCHAR (255) NOT NULL
+);
+
+CREATE TABLE Lote
+(
+	idLote INTEGER NOT NULL,
+	fechaRegistro DATE NOT NULL
+);
+
+CREATE TABLE Factura 
+(
+	idFactura INTEGER NOT NULL,
+	fecha DATE NOT NULL,
+	cliente VARCHAR(11) NOT NULL,
+	vendedor VARCHAR(11) NOT NULL,
+	tipoPago CHAR NOT NULL
+);
+
+
+CREATE TABLE producto_lote
+(
+	idProducto INTEGER NOT NULL,
+	idLote INTEGER NOT NULL,
+	cantidad INTEGER NOT NULL,
+	fechaVencimiento DATE
+);
+
+CREATE TABLE detalle_factura
+(
+	idFactura INTEGER NOT NULL,
+	idProducto INTEGER NOT NULL,
+	cantidad INTEGER NOT NULL,
+	IVA FLOAT
+);
+
+
+
+
+ALTER TABLE Persona 
+	add CONSTRAINT per_nit_PK PRIMARY KEY (nit);
+	
+ALTER TABLE Usuario 
+	ADD CONSTRAINT user_login_PK PRIMARY KEY (login),
+	ADD CONSTRAINT user_nit_FK FOREIGN KEY (nit) REFERENCES Persona(nit);
+	
+ALTER TABLE Producto
+	ADD CONSTRAINT prod_idprod_PK PRIMARY KEY (idProducto);
+	
+ALTER TABLE Lote
+	ADD CONSTRAINT lote_idLote_PK PRIMARY KEY (idLote);
+	
+ALTER TABLE producto_lote 
+	ADD CONSTRAINT prodlot_idprod_FK FOREIGN KEY (idProducto) REFERENCES Producto(idProducto),
+	ADD CONSTRAINT prodlot_idlot_FK FOREIGN KEY (idLote) REFERENCES Lote(idLote);
+	
+ALTER TABLE Factura
+	ADD CONSTRAINT fac_idfac_PK PRIMARY KEY (idFactura),
+	ADD CONSTRAINT fac_client_FK FOREIGN KEY (cliente) REFERENCES Persona(nit),
+	ADD CONSTRAINT fac_vendedor_FK FOREIGN KEY (vendedor) REFERENCES Persona(nit);
+	
+ALTER TABLE detalle_factura
+	ADD CONSTRAINT detfac_idfac_FK FOREIGN KEY (idFactura) REFERENCES Factura(idFactura),
+	ADD CONSTRAINT detfac_idprod_FK FOREIGN KEY (idProducto) REFERENCES Producto(idProducto);
