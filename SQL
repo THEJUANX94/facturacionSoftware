@@ -1,85 +1,82 @@
-CREATE TABLE Persona 
-(
-	nit varchar(11) NOT NULL,
-	tiponit CHAR NOT NULL,
-	nombre VARCHAR (255) NOT NULL,
-	apellidos VARCHAR (255) NOT NULL,
-	correo VARCHAR (255) NOT NULL,
-	genero CHAR NOT NULL
+CREATE SEQUENCE IF NOT EXISTS producto_idproducto_seq;
+
+CREATE TABLE "producto" (
+    "nombre" varchar(255) NOT NULL,
+    "unidadmedida" varchar(255) NOT NULL,
+    "idproducto" int4 NOT NULL DEFAULT nextval('producto_idproducto_seq'::regclass),
+    PRIMARY KEY ("idproducto")
 );
 
-CREATE TABLE Usuario 
-(
-	login VARCHAR (255) NOT NULL,
-	clave VARCHAR (255) NOT NULL,
-	tipoUsuario CHAR NOT NULL,
-	nit VARCHAR (11) NOT NULL
+CREATE UNIQUE INDEX prod_idprod_pk ON producto USING btree (idproducto)
+
+CREATE TABLE "persona" (
+    "nit" varchar(11) NOT NULL,
+    "tiponit" bpchar(2) NOT NULL,
+    "nombre" varchar(255) NOT NULL,
+    "apellidos" varchar(255) NOT NULL,
+    "correo" varchar(255) NOT NULL,
+    "genero" bpchar(1) NOT NULL,
+    PRIMARY KEY ("nit")
 );
 
-CREATE TABLE Producto 
-(
-	idProducto INTEGER NOT NULL,
-	nombre VARCHAR (255) NOT NULL,
-	unidadMedida VARCHAR (255) NOT NULL
+CREATE UNIQUE INDEX per_nit_pk ON persona USING btree (nit)
+
+CREATE SEQUENCE IF NOT EXISTS lote_idlote_seq;
+
+CREATE TABLE "lote" (
+    "fecharegistro" date NOT NULL,
+    "idlote" int4 NOT NULL DEFAULT nextval('lote_idlote_seq'::regclass),
+    PRIMARY KEY ("idlote")
 );
 
-CREATE TABLE Lote
-(
-	idLote INTEGER NOT NULL,
-	fechaRegistro DATE NOT NULL
+CREATE UNIQUE INDEX lote_idlote_pk ON lote USING btree (idlote)
+
+CREATE SEQUENCE IF NOT EXISTS factura_idfactura_seq;
+
+CREATE TABLE "factura" (
+    "fecha" date NOT NULL,
+    "cliente" varchar(11) NOT NULL,
+    "vendedor" varchar(11) NOT NULL,
+    "tipopago" bpchar(1) NOT NULL,
+    "idfactura" int4 NOT NULL DEFAULT nextval('factura_idfactura_seq'::regclass),
+    CONSTRAINT "fac_client_fk" FOREIGN KEY ("cliente") REFERENCES "persona"("nit"),
+    CONSTRAINT "fac_vendedor_fk" FOREIGN KEY ("vendedor") REFERENCES "persona"("nit"),
+    PRIMARY KEY ("idfactura")
 );
 
-CREATE TABLE Factura 
-(
-	idFactura INTEGER NOT NULL,
-	fecha DATE NOT NULL,
-	cliente VARCHAR(11) NOT NULL,
-	vendedor VARCHAR(11) NOT NULL,
-	tipoPago CHAR NOT NULL
+CREATE SEQUENCE IF NOT EXISTS producto_lote_idproducto_seq;
+CREATE SEQUENCE IF NOT EXISTS producto_lote_idlote_seq;
+
+CREATE TABLE "producto_lote" (
+    "cantidad" int4 NOT NULL,
+    "fechavencimiento" date,
+    "idproducto" int4 NOT NULL DEFAULT nextval('producto_lote_idproducto_seq'::regclass),
+    "idlote" int4 NOT NULL DEFAULT nextval('producto_lote_idlote_seq'::regclass),
+    CONSTRAINT "producto_lote_idproducto_fkey" FOREIGN KEY ("idproducto") REFERENCES "producto"("idproducto"),
+    CONSTRAINT "producto_lote_idlote_fkey" FOREIGN KEY ("idlote") REFERENCES "lote"("idlote")
 );
 
+CREATE UNIQUE INDEX fac_idfac_pk ON factura USING btree (idfactura)
 
-CREATE TABLE producto_lote
-(
-	idProducto INTEGER NOT NULL,
-	idLote INTEGER NOT NULL,
-	cantidad INTEGER NOT NULL,
-	fechaVencimiento DATE
+CREATE TABLE "usuario" (
+    "login" varchar(255) NOT NULL,
+    "clave" varchar(255) NOT NULL,
+    "tipousuario" bpchar(1) NOT NULL,
+    "nit" varchar(11) NOT NULL,
+    CONSTRAINT "user_nit_fk" FOREIGN KEY ("nit") REFERENCES "persona"("nit"),
+    PRIMARY KEY ("login")
 );
 
-CREATE TABLE detalle_factura
-(
-	idFactura INTEGER NOT NULL,
-	idProducto INTEGER NOT NULL,
-	cantidad INTEGER NOT NULL,
-	IVA FLOAT
+CREATE UNIQUE INDEX user_login_pk ON usuario USING btree (login)
+
+CREATE SEQUENCE IF NOT EXISTS detalle_factura_idfactura_seq;
+CREATE SEQUENCE IF NOT EXISTS detalle_factura_idproducto_seq;
+
+CREATE TABLE "detalle_factura" (
+    "cantidad" int4 NOT NULL,
+    "iva" float8,
+    "idfactura" int4 NOT NULL DEFAULT nextval('detalle_factura_idfactura_seq'::regclass),
+    "idproducto" int4 NOT NULL DEFAULT nextval('detalle_factura_idproducto_seq'::regclass),
+    CONSTRAINT "detalle_factura_idfactura_fkey" FOREIGN KEY ("idfactura") REFERENCES "factura"("idfactura"),
+    CONSTRAINT "detalle_factura_idproducto_fkey" FOREIGN KEY ("idproducto") REFERENCES "producto"("idproducto")
 );
-
-
-
-
-ALTER TABLE Persona 
-	add CONSTRAINT per_nit_PK PRIMARY KEY (nit);
-	
-ALTER TABLE Usuario 
-	ADD CONSTRAINT user_login_PK PRIMARY KEY (login),
-	ADD CONSTRAINT user_nit_FK FOREIGN KEY (nit) REFERENCES Persona(nit);
-	
-ALTER TABLE Producto
-	ADD CONSTRAINT prod_idprod_PK PRIMARY KEY (idProducto);
-	
-ALTER TABLE Lote
-	ADD CONSTRAINT lote_idLote_PK PRIMARY KEY (idLote);
-	
-ALTER TABLE producto_lote 
-	ADD CONSTRAINT prodlot_idprod_FK FOREIGN KEY (idProducto) REFERENCES Producto(idProducto),
-	ADD CONSTRAINT prodlot_idlot_FK FOREIGN KEY (idLote) REFERENCES Lote(idLote);
-	
-ALTER TABLE Factura
-	ADD CONSTRAINT fac_idfac_PK PRIMARY KEY (idFactura),
-	ADD CONSTRAINT fac_client_FK FOREIGN KEY (cliente) REFERENCES Persona(nit),
-	ADD CONSTRAINT fac_vendedor_FK FOREIGN KEY (vendedor) REFERENCES Persona(nit);
-	
-ALTER TABLE detalle_factura
-	ADD CONSTRAINT detfac_idfac_FK FOREIGN KEY (idFactura) REFERENCES Factura(idFactura),
-	ADD CONSTRAINT detfac_idprod_FK FOREIGN KEY (idProducto) REFERENCES Producto(idProducto);
